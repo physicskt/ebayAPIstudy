@@ -9,7 +9,8 @@ from ebay_api import EbayAPI
 # === パラメータ ===
 ENV = "SANDBOX"  # 'SANDBOX' も選択可能
 QUERY = "M51828"  # カスタムラベル
-ITEM_ID = "v1|1234567890|0"  # 調査するeBay itemId
+# ITEM_ID = "v1|1234567890|0"  # 調査するeBay itemId
+ITEM_ID = "v1|396426650353|0"  # 調査するeBay itemId
 
 BASE_TIME_ISO = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")  # 現在時刻
 FLUCTUATION_SECONDS = 30  # ±何秒
@@ -58,6 +59,19 @@ def check_item_once(api: EbayAPI, query, item_id, base_time, fluctuation_seconds
     if items:
         price_info = items[0].get("lastSoldPrice", {})
         top_price = f"{price_info.get('value')} {price_info.get('currency')}"
+        
+        # アイテムをループして指定アイテムを探す
+        for item in items:
+            if item.get("itemId") == item_id:
+                status = "圏内" if rank <= max_rank else "圏外"
+                return query, item_id, rank, top_price, status
+            rank += 1
+        
+        # 指定アイテムが見つからなかった場合
+        return query, item_id, None, top_price, "圏外"
+    
+    # アイテムがない場合
+    return query, item_id, None, None, "未検出"
 
 
 if __name__ == "__main__":
