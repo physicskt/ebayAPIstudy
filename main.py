@@ -27,22 +27,30 @@ def build_last_sold_filter(base_time: str, fluctuation_seconds: int) -> str:
 
 
 def check_item_once(api: EbayAPI, query, item_id, base_time, fluctuation_seconds, max_rank, limit):
-    filter_clause = build_last_sold_filter(base_time, fluctuation_seconds)
-    filter_clause += ",itemLocationCountry:US,priceCurrency:USD"
-
+    # price フィルターを追加
+    filter_clause = "itemLocationCountry:US,priceCurrency:USD,price:[0.01..]"
+    
     params = {
         "q": query,
         "limit": limit,
         "offset": 0,
         "filter": filter_clause,
-        "sort": "price"
+        "sort": "price"  # price でソートする場合は price フィルターが必要
     }
-
-    url = f"{api.api_url}/buy/marketplace_insights/v1_beta/item_sales/search?{urlencode(params)}"
-    res = requests.get(url, headers=api.get_headers())
-    res.raise_for_status()
+    
+    # デバッグ出力
+    full_url = f"{api.api_url}/buy/marketplace_insights/v1_beta/item_sales/search?{urlencode(params)}"
+    print(f"リクエストURL: {full_url}")
+    
+    res = requests.get(full_url, headers=api.get_headers())
+    
+    # エラーの詳細情報を取得
+    if not res.ok:
+        print(f"エラーコード: {res.status_code}")
+        print(f"エラー詳細: {res.text}")
+        return query, item_id, None, None, f"エラー: {res.status_code}"  # エラー時にも結果を返す
+    
     data = res.json()
-
     items = data.get("itemSales", [])
     top_price = None
     rank = 1
@@ -51,30 +59,19 @@ def check_item_once(api: EbayAPI, query, item_id, base_time, fluctuation_seconds
         price_info = items[0].get("lastSoldPrice", {})
         top_price = f"{price_info.get('value')} {price_info.get('currency')}"
 
-        for item in items:
-            if item.get("itemId") == item_id:
-                status = "圏内" if rank <= max_rank else "圏外"
-                return query, item_id, rank, top_price, status
-            rank += 1
 
-        return query, item_id, None, top_price, "圏外"
-
-    return query, item_id, None, None, "未検出"
-
-
-# === 実行 ===
 if __name__ == "__main__":
-    ebay = EbayAPI(env=ENV)
-
-    result = check_item_once(
-        ebay, QUERY, ITEM_ID,
-        BASE_TIME_ISO, FLUCTUATION_SECONDS,
-        MAX_RANK, LIMIT
-    )
-
-    with open(OUTPUT_FILE, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["label", "item_id", "rank", "top_price", "status"])
-        writer.writerow(result)
-
-    print(f"結果を {OUTPUT_FILE} に書き出しました。")
+    api = EbayAPI(env=ENV)
+    
+    # ヘッダーの準備
+    headers = ["query", "item_id", "top_price", "rank", "error"]
+    
+    # CSVファイルの初期化
+    with open(OUTPUT_FILE, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(headers)
+        
+        # 一度だけアイテムをチェック
+        result = check_item_once(api, QUERY, ITEM_ID, BASE_TIME_ISO, FLUCTUATION_SECONDS, MAX_RANK, LIMIT)
+        print(result)
+        # writer.writerow(result)  # 結果を書き込む
