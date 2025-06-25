@@ -21,7 +21,7 @@ class EbayAPI:
             self.auth_url = "https://api.ebay.com/identity/v1/oauth2/token"
             self.api_url = "https://api.ebay.com"
         else:
-            raise ValueError("env‚Í 'SANDBOX' ‚Ü‚½‚Í 'PROD' ‚ğw’è‚µ‚Ä‚­‚¾‚³‚¢B")
+            raise ValueError("envã¯ 'SANDBOX' ã¾ãŸã¯ 'PROD' ã‚’æŒ‡å®šã—ã¦ãã ã•ã„ã€‚")
 
         self.scope = os.getenv("EBAY_SCOPE", "https://api.ebay.com/oauth/api_scope/buy.marketplace.insights")
         self.access_token = self.get_access_token()
@@ -43,7 +43,7 @@ class EbayAPI:
         if response.status_code == 200:
             return response.json()["access_token"]
         else:
-            raise Exception(f"”FØƒGƒ‰[: {response.status_code} {response.text}")
+            raise Exception(f"èªè¨¼ã‚¨ãƒ©ãƒ¼: {response.status_code} {response.text}")
 
     def get_headers(self):
         return {

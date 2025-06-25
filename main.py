@@ -6,19 +6,19 @@ import requests
 from ebay_api import EbayAPI
 
 
-# === ƒpƒ‰ƒ[ƒ^ ===
-ENV = "PROD"  # 'SANDBOX' ‚à‘I‘ð‰Â”\
-QUERY = "M51828"  # ƒJƒXƒ^ƒ€ƒ‰ƒxƒ‹
-ITEM_ID = "v1|1234567890|0"  # ’²¸‚·‚éeBay itemId
+# === ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ ===
+ENV = "SANDBOX"  # 'SANDBOX' ã‚‚é¸æŠžå¯èƒ½
+QUERY = "M51828"  # ã‚«ã‚¹ã‚¿ãƒ ãƒ©ãƒ™ãƒ«
+ITEM_ID = "v1|1234567890|0"  # èª¿æŸ»ã™ã‚‹eBay itemId
 
-BASE_TIME_ISO = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")  # Œ»ÝŽž
-FLUCTUATION_SECONDS = 30  # }‰½•b
-MAX_RANK = 20  # Œ—“à‡ˆÊ
-LIMIT = 200  # Å‘åŽæ“¾Œ”
+BASE_TIME_ISO = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")  # ç¾åœ¨æ™‚åˆ»
+FLUCTUATION_SECONDS = 30  # Â±ä½•ç§’
+MAX_RANK = 20  # åœå†…é †ä½
+LIMIT = 200  # æœ€å¤§å–å¾—ä»¶æ•°
 OUTPUT_FILE = "result.csv"
 
 
-# === ŠÖ” ===
+# === é–¢æ•° ===
 def build_last_sold_filter(base_time: str, fluctuation_seconds: int) -> str:
     dt = datetime.strptime(base_time, "%Y-%m-%dT%H:%M:%SZ")
     from_time = (dt - timedelta(seconds=fluctuation_seconds)).isoformat() + "Z"
@@ -53,16 +53,16 @@ def check_item_once(api: EbayAPI, query, item_id, base_time, fluctuation_seconds
 
         for item in items:
             if item.get("itemId") == item_id:
-                status = "Œ—“à" if rank <= max_rank else "Œ—ŠO"
+                status = "åœå†…" if rank <= max_rank else "åœå¤–"
                 return query, item_id, rank, top_price, status
             rank += 1
 
-        return query, item_id, None, top_price, "Œ—ŠO"
+        return query, item_id, None, top_price, "åœå¤–"
 
-    return query, item_id, None, None, "–¢ŒŸo"
+    return query, item_id, None, None, "æœªæ¤œå‡º"
 
 
-# === ŽÀs ===
+# === å®Ÿè¡Œ ===
 if __name__ == "__main__":
     ebay = EbayAPI(env=ENV)
 
@@ -77,4 +77,4 @@ if __name__ == "__main__":
         writer.writerow(["label", "item_id", "rank", "top_price", "status"])
         writer.writerow(result)
 
-    print(f"Œ‹‰Ê‚ð {OUTPUT_FILE} ‚É‘‚«o‚µ‚Ü‚µ‚½B")
+    print(f"çµæžœã‚’ {OUTPUT_FILE} ã«æ›¸ãå‡ºã—ã¾ã—ãŸã€‚")
